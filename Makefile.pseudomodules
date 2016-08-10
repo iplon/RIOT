@@ -54,3 +54,4 @@ PSEUDOMODULES += at86rf21%
 
 # add all pseudo random number generator variants as pseudomodules
 PSEUDOMODULES += prng_%
+PSEUDOMODULES += usbdev-acm
