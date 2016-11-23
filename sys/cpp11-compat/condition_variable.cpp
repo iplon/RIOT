@@ -22,11 +22,11 @@
 #include <system_error>
 
 #include "irq.h"
+#include "priority_queue.h"
 #include "sched.h"
 #include "thread.h"
 #include "timex.h"
 #include "xtimer.h"
-#include "priority_queue.h"
 
 #include "riot/condition_variable.hpp"
 
@@ -38,10 +38,10 @@ condition_variable::~condition_variable() { m_queue.first = NULL; }
 
 void condition_variable::notify_one() noexcept {
   unsigned old_state = irq_disable();
-  priority_queue_node_t* head = priority_queue_remove_head(&m_queue);
+  priority_queue_node_t *head = priority_queue_remove_head(&m_queue);
   int other_prio = -1;
   if (head != NULL) {
-    thread_t* other_thread = (thread_t*)sched_threads[head->data];
+    thread_t *other_thread = (thread_t *)sched_threads[head->data];
     if (other_thread) {
       other_prio = other_thread->priority;
       sched_set_status(other_thread, STATUS_PENDING);
@@ -58,14 +58,15 @@ void condition_variable::notify_all() noexcept {
   unsigned old_state = irq_disable();
   int other_prio = -1;
   while (true) {
-    priority_queue_node_t* head = priority_queue_remove_head(&m_queue);
+    priority_queue_node_t *head = priority_queue_remove_head(&m_queue);
     if (head == NULL) {
       break;
     }
-    thread_t* other_thread = (thread_t*)sched_threads[head->data];
+    thread_t *other_thread = (thread_t *)sched_threads[head->data];
     if (other_thread) {
-      auto max_prio
-        = [](int a, int b) { return (a < 0) ? b : ((a < b) ? a : b); };
+      auto max_prio = [](int a, int b) {
+        return (a < 0) ? b : ((a < b) ? a : b);
+      };
       other_prio = max_prio(other_prio, other_thread->priority);
       sched_set_status(other_thread, STATUS_PENDING);
     }
@@ -77,11 +78,11 @@ void condition_variable::notify_all() noexcept {
   }
 }
 
-void condition_variable::wait(unique_lock<mutex>& lock) noexcept {
+void condition_variable::wait(unique_lock<mutex> &lock) noexcept {
   if (!lock.owns_lock()) {
-    throw std::system_error(
-      std::make_error_code(std::errc::operation_not_permitted),
-      "Mutex not locked.");
+    // throw std::system_error(
+    //   std::make_error_code(std::errc::operation_not_permitted),
+    //   "Mutex not locked.");
   }
   priority_queue_node_t n;
   n.priority = sched_active_thread->priority;
@@ -102,8 +103,8 @@ void condition_variable::wait(unique_lock<mutex>& lock) noexcept {
   mutex_lock(lock.mutex()->native_handle());
 }
 
-cv_status condition_variable::wait_until(unique_lock<mutex>& lock,
-                                         const time_point& timeout_time) {
+cv_status condition_variable::wait_until(unique_lock<mutex> &lock,
+                                         const time_point &timeout_time) {
   xtimer_t timer;
   // todo: use function to wait for absolute timepoint once available
   timex_t before;

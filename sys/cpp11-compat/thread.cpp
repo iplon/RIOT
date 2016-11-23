@@ -37,8 +37,8 @@ thread::~thread() {
 
 void thread::join() {
   if (this->get_id() == this_thread::get_id()) {
-    throw system_error(make_error_code(errc::resource_deadlock_would_occur),
-                       "Joining this leads to a deadlock.");
+    // throw system_error(make_error_code(errc::resource_deadlock_would_occur),
+    //                    "Joining this leads to a deadlock.");
   }
   if (joinable()) {
     auto status = thread_getstatus(m_handle);
@@ -48,8 +48,8 @@ void thread::join() {
     }
     m_handle = thread_uninitialized;
   } else {
-    throw system_error(make_error_code(errc::invalid_argument),
-                       "Can not join an unjoinable thread.");
+    // throw system_error(make_error_code(errc::invalid_argument),
+    //                    "Can not join an unjoinable thread.");
   }
   // missing: no_such_process system error
 }
@@ -58,8 +58,8 @@ void thread::detach() {
   if (joinable()) {
     m_handle = thread_uninitialized;
   } else {
-    throw system_error(make_error_code(errc::invalid_argument),
-                       "Can not detach an unjoinable thread.");
+    // throw system_error(make_error_code(errc::invalid_argument),
+    //                    "Can not detach an unjoinable thread.");
   }
 }
 
@@ -70,10 +70,11 @@ unsigned thread::hardware_concurrency() noexcept {
 
 namespace this_thread {
 
-void sleep_for(const chrono::nanoseconds& ns) {
+void sleep_for(const chrono::nanoseconds &ns) {
   using namespace chrono;
   if (ns > nanoseconds::zero()) {
-    xtimer_usleep64(static_cast<uint64_t>(duration_cast<microseconds>(ns).count()));
+    xtimer_usleep64(
+        static_cast<uint64_t>(duration_cast<microseconds>(ns).count()));
   }
 }
 
